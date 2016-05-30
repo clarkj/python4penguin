@@ -262,8 +262,8 @@ if(filter == True):
 	print "current utc time to millisecond precision", now
 	#add feild based on ms time application acquired modbus data and wrote to file
 
-	df["tempId"] = "tempId"
-	dfout["tempId"] = time.time() # don't multiply, changes notion of precision * 10
+	df["_id"] = "_id"
+	dfout["_id"] = time.time() # don't multiply, changes notion of precision * 10
 	
 	df["dateOnPi"] = "dateOnPi"
 	dfout["dateOnPi"] = now

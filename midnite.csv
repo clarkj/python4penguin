@@ -29,7 +29,7 @@ CTime0r1,0
 CTime1r0,0
 CTime1r1,0
 CTime2,0
-CTimeID,CTimeFixMe-2016-05-30T03:05:43Z
+CTimeID,CTimeFixMe-2016-05-30T03:42:23Z
 ClassicFmePassedBits,0
 ClipperCmdVolts,0
 ComboChargeState,0
@@ -101,7 +101,7 @@ StatusRoll,0
 SweepDepth,0
 SweepIntervaSecs,0
 SwpDeepTimeoutSec,0
-Time,1464577543.967607
+Time,1464579743.067789
 USBcommMODE,0
 VariMax,0
 VbattOffset,0
