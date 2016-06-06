@@ -1,0 +1,4 @@
+current utc time to millisecond precision 2016-06-06T16:44:07.390Z
+run midnite time conv
+found ctime0r0  11287
+success converting register time 2016-07-07T00:44:23Z

@@ -6,6 +6,7 @@
 # Caches a selection of Modbus TCP registers from a device in a local file.
 # tab = \t
 import sys
+import math
 import csv
 import time
 import argparse
@@ -20,10 +21,11 @@ from pymodbus.transaction import ModbusRtuFramer as ModbusFramer
 #-------------------------------------------------------------------------------
 PROGRAM_DESCRIPTION = 'A utility for caching Modbus TCP holding registers.'
 DEFAULT_PATH = 'midnite.csv'
-DEFAULT_RPATH = 'midnite.reg'
-DEFAULT_FILTER_IN = 'midniteFilter.reg'
-# DEFAULT_IP = '192.168.1.100'
-DEFAULT_IP = '127.0.0.1'
+DEFAULT_RPATH = 'mid.reg'
+DEFAULT_FILTER_IN = 'mid.reg'
+#DEFAULT_FILTER_IN = 'midniteFilter.reg'
+DEFAULT_IP = '172.25.2.103'
+# DEFAULT_IP = '127.0.0.1'
 DEFAULT_PORT = 502
 DEFAULT_ADDRESS = 4100
 DEFAULT_ADDRESS_OFFSET = 1
@@ -50,7 +52,7 @@ class Arguments:
 		# print("minuteFloor ", minFloor, "minute ", todayMin)
 		formatHr = "%Y-%m-%dT%H:"
 		todayFloor = datetime.datetime.today().strftime(formatHr)
-		todayFloor = todayFloor + str(minFloor) + ".csv"
+		todayFloor = todayFloor + str(minFloor).zfill(2) + ".csv"
 		# add the arguments
 		self.parser.add_argument('-c', '--cachefile', help='Cache path', type=str, default=DEFAULT_PATH)
 		self.parser.add_argument('-r', '--registerfile', help='Register list path', type=str, default=DEFAULT_RPATH)
@@ -179,22 +181,23 @@ class ModbusDevice:
 		self.client.close()
 
 
-# Function definition for 
-def getDeviceTime( df ):
-	"Function uses dictionary to create device time based on register values"
-	CTime0r0 = dr["CTime0r0"]
-	CTime0r1 = dr["CTime0r1"]
-	CTime1r0 = dr["CTime1r0"]
-	CTime1r1 = dr["CTime1r1"]
-	CTime2 = dr["CTime2"]
-	print "device Current Time registers ", hex(CTime0r0), hex(CTime0r1), hex(CTime1r0), hex(CTime1r1), hex(CTime2)
-	format = "%Y-%m-%dT%H:%M:%S"
-	now = datetime.datetime.utcnow().strftime(format) + str("Z") # make sure charge controller set to GMT
-	deviceTime="CTimeFixMe-" + now
-	print deviceTime
-	return deviceTime;
+from midniteTimeConv import MidniteTimeConv
+from MidniteTimeConv import setTimeValues
 
-		
+ # Function definition for
+def getDeviceTime( df ): 
+	"Function uses dictionary to create device time based on register values"
+	mTime = MidniteTimeConv()
+	mTime.setTimeValues(df["CTime0r0"], df["CTime0r1"], df["CTime1r0"], df["CTime1r1"], df["CTime2"])
+	deviceTime=mTime.getDeviceTime()
+	print 'midnite registers time as ', deviceTime
+	return deviceTime;
+       
+
+
+
+
+
 #-------------------------------------------------------------------------------
 # Main Program
 #-------------------------------------------------------------------------------
@@ -263,10 +266,14 @@ if(filter == True):
 	#add feild based on ms time application acquired modbus data and wrote to file
 
 	df["_id"] = "_id"
-	dfout["_id"] = time.time() # don't multiply, changes notion of precision * 10
+	dfout["_id"] = int(time.time()) # don't multiply, changes notion of precision * 10
 	
 	df["dateOnPi"] = "dateOnPi"
 	dfout["dateOnPi"] = now
+
+	df["dateOnDevice"] = "dateOnDevice"
+        dfout["dateOnDevice"] = now
+	
 	
 	for row in filterReader:
 		df[row[0]] = row[1]
@@ -335,22 +342,26 @@ di = dict(zip(device.getIndex(), device.getKeys()))
 # Put in the timestamp
 dr["Time"] = time.time()
 
+
+deviceTime = getDeviceTime(dr)
+dr["TimeOnDevice"] = deviceTime
+
 ## need a routine to get "deviceTime" from CTime registers and call field "_id" for data uniqueness
 #dfout["Time"] = time.time()
 #df["Time"] = "Time"
 
-deviceTime = getDeviceTime(dr)
-print "device time ", deviceTime
+#deviceTime = getDeviceTime(dr)
+#print "device time ", deviceTime
 
 if (filter == True):
 	# dr["CTimeID"] = "CTimeID"
-	df["CTimeID"] = "CTimeID"
-	dfout["CTimeID"] = deviceTime
-	dr["CTimeID"] = deviceTime
-	filterWriter = csv.DictWriter(filterFileOut, df.keys())
+# 	df["CTimeID"] = "CTimeID"
+# 	dfout["CTimeID"] = deviceTime
+# 	dr["CTimeID"] = deviceTime
+ 	filterWriter = csv.DictWriter(filterFileOut, df.keys())
 
 
-
+	# Returns 
 # Put in the Success value
 if (device.getErrFlag()):
 	dr["Status"] = "Error"

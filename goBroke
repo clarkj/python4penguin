@@ -1,0 +1,11 @@
+#!/bin/sh
+wait = 1.0
+fileruntimeavg=0.334
+delay = 'echo "$wait-$fileruntimeavg"|bc'
+file=go.loop
+touch $file
+while test -f $file
+do
+  ./modcache.py
+  sleep $delay
+done
